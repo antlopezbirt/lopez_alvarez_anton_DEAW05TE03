@@ -1,0 +1,48 @@
+name: deaw05te03-antlopez
+
+services:
+  mysql:
+    image: mysql:5.7
+    command:
+      - "--innodb_use_native_aio=0"
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--skip-ssl"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./bbdd:/var/lib/mysql
+    user: mysql
+    networks:
+      - backend
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+    ports:
+      - 8085:80
+    depends_on:
+      - mysql
+    networks:
+      - frontend
+      - backend
+
+  jboss:
+    container_name: wildfly
+    image: quay.io/wildfly/wildfly:26.1.2.Final-jdk17
+    ports:
+      - 8080:8080
+      - 9990:9990
+    environment:
+      - JAVA_OPTS=-Djboss.bind.address=0.0.0.0 -Djboss.bind.address.management=0.0.0.0
+    command: >
+      sh -c "/opt/jboss/wildfly/bin/add-user.sh -u admin -p admin --silent
+      && /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0"
+    depends_on:
+      - mysql
+    networks:
+      - backend
+      
+networks:
+  frontend:
+  backend:
