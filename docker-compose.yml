@@ -2,6 +2,7 @@ name: deaw05te03-antlopez
 
 services:
   mysql:
+    container_name: mysql
     image: mysql:5.7
     command:
       - "--innodb_use_native_aio=0"
@@ -16,6 +17,7 @@ services:
       - backend
 
   phpmyadmin:
+    container_name: phpmyadmin
     image: phpmyadmin/phpmyadmin
     environment:
       PMA_HOST: mysql
@@ -24,25 +26,23 @@ services:
     depends_on:
       - mysql
     networks:
-      - frontend
       - backend
 
   jboss:
     container_name: wildfly
-    image: quay.io/wildfly/wildfly:26.1.2.Final-jdk17
+    image: quay.io/wildfly/wildfly:26.0.0.Final
     ports:
       - 8080:8080
       - 9990:9990
-    environment:
-      - JAVA_OPTS=-Djboss.bind.address=0.0.0.0 -Djboss.bind.address.management=0.0.0.0
     command: >
       sh -c "/opt/jboss/wildfly/bin/add-user.sh -u admin -p admin --silent
       && /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0"
+    volumes:
+      - ./wildfly/configuration/standalone.xml:/opt/jboss/wildfly/standalone/configuration/standalone.xml
     depends_on:
       - mysql
     networks:
       - backend
       
 networks:
-  frontend:
   backend:
